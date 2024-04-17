@@ -3,19 +3,33 @@ from django.views.generic import ListView, DetailView, CreateView
 from django.urls import reverse_lazy
 from .models import News, Category
 from .forms import NewsForm
+from .utils import MyMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
 
 
-class HomeNews(ListView):
+def test(request):
+    objects = ["john", "paul", "george", "ringo", "joh1221n", "pa1221ul", "geor1221ge", "ri12212ngo", "last9"]
+    paginator = Paginator(objects, 2)
+    page_num = request.GET.get('page', 1)
+    page_objects = paginator.get_page(page_num)
+    return render(request, 'news/test.html', {'page_obj': page_objects})
+
+
+class HomeNews(MyMixin, ListView):
     model = News
     template_name = 'news/home_news_list.html'
     context_object_name = 'news'
+    mixin_prop = 'hello_world'
+    paginate_by = 2
     # queryset = News.objects.select_related('category')
 
     # extra_context = {'title': 'Главная'}
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Главная страница'
+        context['title'] = self.get_upper('Главная страница')
+        context['mixin_prop'] = self.get_prop()
         return context
 
     def get_queryset(self):
@@ -28,9 +42,10 @@ class ViewNews(DetailView):
     # template_name = 'news/news_detail.html'
     # pk_url_kwarg = 'news_id'
 
-class CreateNews(CreateView):
+class CreateNews(LoginRequiredMixin, CreateView):
     form_class = NewsForm
     template_name = 'news/add_news.html'
+    login_url = '/admin/'
     # success_url = reverse_lazy('home')
 
 
@@ -42,15 +57,16 @@ class CreateNews(CreateView):
 #     }
 #     return render(request, 'news/index.html', context)
 
-class CategoryNews(ListView):
+class CategoryNews(MyMixin, ListView):
     model = News
     template_name = 'news/home_news_list.html'
     context_object_name = 'news'
     allow_empty = False
+    paginate_by = 2
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = Category.objects.get(pk=self.kwargs['category_id'])
+        context['title'] = self.get_upper(Category.objects.get(pk=self.kwargs['category_id']))
         return context
 
     def get_queryset(self):
