@@ -21,6 +21,23 @@
         </div>
 
         <div class="col-md-9">
+
+            {% if messages %}
+            {% for message in messages %}
+            {% if message.tags == 'error' %}
+            <div class="alert alert-danger" role="alert">
+                {{ message }}
+            </div>
+            {% else %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                {{ message }}
+            </div>
+            {% endif %}
+
+
+            {% endfor %}
+            {% endif %}
+
             {% block content %}Content{% endblock %}
 
             {% if page_obj.has_other_pages %}
@@ -29,13 +46,15 @@
                 <ul class="pagination">
 
                     {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.number|add:-1 }}">Previous</a>
+                    <li class="page-item"><a class="page-link"
+                                             href="?page={{ page_obj.number|add:-1 }}">Previous</a>
                     </li>
                     {% endif %}
 
                     {% for p in page_obj.paginator.page_range %}
                     {% if page_obj.number == p %}
-                    <li class="page-item active" aria-current="page"><a class="page-link" href="">{{ p }}
+                    <li class="page-item active" aria-current="page"><a class="page-link" href="">{{
+                        p }}
                         <span class="sr-only"></span></a></li>
 
                     {% elif p > page_obj.number|add:-3 and p < page_obj.number|add:3 %}
@@ -45,7 +64,8 @@
                     {% endfor %}
 
                     {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.number|add:1 }}">Next</a></li>
+                    <li class="page-item"><a class="page-link"
+                                             href="?page={{ page_obj.number|add:1 }}">Next</a></li>
                     {% endif %}
 
                 </ul>

@@ -2,14 +2,34 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView
 from django.urls import reverse_lazy
 from .models import News, Category
-from .forms import NewsForm
+from .forms import NewsForm, UserRegisterForm
 from .utils import MyMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
+from django.contrib import messages
+
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Вы успешно зарегестрировались')
+            return redirect('login')
+        else:
+            messages.error(request, 'Ошибка регистрации')
+    else:
+        form = UserRegisterForm()
+    return render(request, 'news/register.html', {'form': form})
+
+
+def login(request):
+    return render(request, 'news/login.html')
 
 
 def test(request):
-    objects = ["john", "paul", "george", "ringo", "joh1221n", "pa1221ul", "geor1221ge", "ri12212ngo", "last9"]
+    objects = ["john", "paul", "george", "ringo", "joh1221n", "pa1221ul", "geor1221ge",
+               "ri12212ngo", "last9"]
     paginator = Paginator(objects, 2)
     page_num = request.GET.get('page', 1)
     page_objects = paginator.get_page(page_num)
@@ -22,6 +42,7 @@ class HomeNews(MyMixin, ListView):
     context_object_name = 'news'
     mixin_prop = 'hello_world'
     paginate_by = 2
+
     # queryset = News.objects.select_related('category')
 
     # extra_context = {'title': 'Главная'}
@@ -41,6 +62,7 @@ class ViewNews(DetailView):
     context_object_name = 'news_item'
     # template_name = 'news/news_detail.html'
     # pk_url_kwarg = 'news_id'
+
 
 class CreateNews(LoginRequiredMixin, CreateView):
     form_class = NewsForm
@@ -70,8 +92,8 @@ class CategoryNews(MyMixin, ListView):
         return context
 
     def get_queryset(self):
-        return News.objects.filter(category_id=self.kwargs['category_id'], is_published=True).select_related('category')
-
+        return News.objects.filter(category_id=self.kwargs['category_id'],
+                                   is_published=True).select_related('category')
 
 # def get_category(request, category_id):
 #     news = News.objects.filter(category_id=category_id)
